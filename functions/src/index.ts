@@ -24,6 +24,7 @@ export const saveMood  = functions.https.onRequest( async (request, response) =>
 	const data = {
 		userid: request.query.userid,
 		mood: request.query.mood,
+		intensity: request.query.intensity,
 		TimeStamp: (new Date).getTime()
 	}
 	// console.log(JSON.stringify(ref, null, 2));
@@ -41,13 +42,25 @@ export const saveMood  = functions.https.onRequest( async (request, response) =>
 });
 
 
-export const getFeelings = functions.https.onRequest((request, response) => {
+export const getAllMoods = functions.https.onRequest((request, response) => {
 	db.collection('moods').get().then((snapshot: any) => {
-		snapshot.forEach((doc: any) => {
-			console.log(doc.id, ' -> ', doc.data());
-		});
-		response.send(snapshot);
+		response.send(snapshot.docs.map((doc: any) => doc.data()));
+		return;
+	}).catch((error) => {
+		response.send({error: error});
 	})
+});
+
+
+export const getUserMoods = functions.https.onRequest((request, response) => {
+	const userid = request.query.userid;
+	const queryRef = db.collection('moods').where('userid', '==', userid);
+	queryRef.get()
+	.then((snapshot: any) => {
+		const data = snapshot.docs.map((doc: any) => doc.data());
+		response.send(data);
+	})
+	.catch((error: any) => response.send(error));
 });
 
 
